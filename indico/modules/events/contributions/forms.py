@@ -201,8 +201,7 @@ class ContributionTypeForm(IndicoForm):
         if query.count():
             raise ValidationError(_("A contribution type with this name already exists"))
 
-#from wtforms.fields.core import BooleanField, FieldList, FloatField, FormField, IntegerField, RadioField, StringField
-#from wtforms import Form
+
 class LimitEntryForm(IndicoForm):
     #label = HiddenField()
     limit = IntegerField(default=None)
@@ -213,15 +212,12 @@ class LimitEntryForm(IndicoForm):
         #if 'obj' in kwargs and kwargs['obj'] is not None:
         #    self.limit.label.text = kwargs['obj'].label.name
 
-    #def validate_name(self, field):
-    #    if field.data:
-    #        if room and room != self.vc_room:
-    #            raise ValidationError(_("There is already a room with this name"))
 
 class TypeLimitsForm(IndicoForm):
     """A form for one or more addresses"""
     #title = HiddenField()
     type_limits = FieldList(FormField(LimitEntryForm), min_entries=1)
+
 
 class TrackTypeLimitsForm(IndicoForm):
     track_type_limits = FieldList(FormField(TypeLimitsForm), min_entries=1)

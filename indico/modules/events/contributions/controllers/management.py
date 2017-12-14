@@ -483,41 +483,46 @@ class RHManageContributionLimits(RHManageContributionsBase):
 
     def _process(self):
         contrib_limits = self.event.contribution_limits.all()
-        contrib_types = self.event.contribution_types.all()
+        contrib_types = sorted((t for t in self.event.contribution_types.all()), key=lambda x: x.id)
         type_limits = []
         track_type_limits = []
-        for tr in self.event.tracks:
-            for ty in contrib_types:
-                track_type_limit = [cont for cont in contrib_limits if cont.type_id == ty.id and cont.track_id == tr.id]
+        tr_count = len(self.event.tracks)
+        ty_count = len(contrib_types)
+        for tr in range(1, tr_count+1):
+            for ty in range(1, ty_count+1):
+                track_type_limit = [cl for cl in contrib_limits if cl.type_id == ty and cl.track_id == tr]
                 limit = track_type_limit[0] if len(track_type_limit) else None
-                type_limits += [{"limit": None if limit is None else limit.value, "label": ty.name}]
-            track_type_limits += [{"title": tr.title, "type_limits": type_limits}]
+                type_limits += [{"limit": None if limit is None else limit.value, "label": contrib_types[ty-1].name}]
+            track_type_limits += [{"title": self.event.tracks[tr-1].title, "type_limits": type_limits}]
             type_limits = []
-
-        #flash(_('The settings for "{}" have been savedd.').format('mani'), 'success')
         form = TrackTypeLimitsForm(track_type_limits=track_type_limits)
         if request.method == 'POST':
-            #raise Exception(form.data)
-            #flash(_('The settings for "{}" have been savedd.'+form.data[track_type_limits][type_limits][0]).format('mani'), 'success')
-            for tr in self.event.tracks:
-                for ty in contrib_types:
-                    limit = ContributionLimit.query.filter_by(track_id=tr.id, type_id=ty.id).first()
-                    val = form.data['track_type_limits'][tr.id-1]['type_limits'][ty.id-1]['limit']
+            for tr in range(1, tr_count+1):
+                for ty in range(1, ty_count+1):
+                    limit = ContributionLimit.query.filter_by(track_id=tr, type_id=ty).first()
+                    val = form.data['track_type_limits'][tr-1]['type_limits'][ty-1]['limit']
                     if val:
                         if limit:
+                            # update
                             if limit.value != val:
-                                limit.value = form.data['track_type_limits'][tr.id-1]['type_limits'][ty.id-1]['limit']
+                                limit.value = val
                         else:
+                            # insert
                             lim = ContributionLimit()
                             lim.event_id = self.event.id
-                            lim.track_id = tr.id
-                            lim.type_id = ty.id
+                            lim.track_id = tr
+                            lim.type_id = ty
                             lim.value = val
                             db.session.add(lim)
-                        db.session.commit()
-            #flash(form.data['track_type_limits'][0]['type_limits'][0]['limit'])
-            #flash(limit)
+                    else:
+                        if limit:
+                            limit.value = None
+                    limit = None
+                    val = None
+                db.session.commit()
+            flash(_('The limitations have been successfully updated.'), 'success')
             return jsonify_data()
+
         if form.validate():
             return redirect(url_for('login'))
 

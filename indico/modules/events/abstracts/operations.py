@@ -229,10 +229,15 @@ def judge_abstract(abstract, abstract_data, judgment, judge, contrib_session=Non
         if not abstract.accepted_contrib_type:
             raise Exception("The contribution type is missing.")
 
-        limit = ContributionLimit.query.filter_by(event_id=abstract.event.id, track_id=(None if not abstract.accepted_track else abstract.accepted_track.id), type_id=abstract.accepted_contrib_type.id).first().value
-        val = Abstract.query.filter_by(event_id=abstract.event.id, accepted_track_id=(None if not abstract.accepted_track else abstract.accepted_track.id), accepted_contrib_type_id=abstract.accepted_contrib_type.id).count()
+        limit_obj =  ContributionLimit.query.filter_by(event_id=abstract.event.id,
+                                                       track_id=(None if not abstract.accepted_track else abstract.accepted_track.id),
+                                                       type_id=abstract.accepted_contrib_type.id).first()
+        limit = None if not limit_obj else limit_obj.value
+        val = Abstract.query.filter_by(event_id=abstract.event.id,
+                                       accepted_track_id=(None if not abstract.accepted_track else abstract.accepted_track.id),
+                                       accepted_contrib_type_id=abstract.accepted_contrib_type.id).count()
 
-        if val >= limit+1:
+        if limit and val >= limit+1:
             raise Exception("Abstract admission limit of <b>%s</b> has been reached for type <i>'%s'</i> on track <i>'%s'</i>."
             " Please either reset a previous judgement or repport this." % (limit, abstract.accepted_contrib_type.name,
             'No track' if not abstract.accepted_track else abstract.accepted_track.title))

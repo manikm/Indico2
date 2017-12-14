@@ -101,8 +101,6 @@ _bp.add_url_rule('/manage/contributions/types/<int:contrib_type_id>/delete', 'de
 
 # Contribution limitations
 _bp.add_url_rule('/manage/contributions/limits/', 'manage_limitations', management.RHManageContributionLimits, methods=('GET', 'POST'))
-#_bp.add_url_rule('/manage/contributions/limits/update', 'update_limitations', management.RHUpdateContributionLimits,
-#                 methods=('GET', 'POST'))
 
 # Custom contribution fields
 _bp.add_url_rule('/manage/contributions/fields/', 'manage_fields', management.RHManageContributionFields)
