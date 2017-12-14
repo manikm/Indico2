@@ -39,6 +39,7 @@ from indico.modules.events.contributions.models.fields import ContributionField
 from indico.modules.events.contributions.models.references import ContributionReference, SubContributionReference
 from indico.modules.events.contributions.models.subcontributions import SubContribution
 from indico.modules.events.contributions.models.types import ContributionType
+from indico.modules.events.contributions.models.limits import ContributionLimit
 from indico.modules.events.contributions.operations import (create_contribution, create_subcontribution,
                                                             delete_contribution, delete_subcontribution,
                                                             update_contribution, update_subcontribution)
@@ -477,7 +478,6 @@ class RHManageContributionTypes(RHManageContributionsBase):
         return jsonify_template('events/contributions/management/types_dialog.html', event=self.event,
                                 contrib_types=contrib_types)
 
-from indico.modules.events.contributions.models.limits import ContributionLimit
 class RHManageContributionLimits(RHManageContributionsBase):
     """Dialog to manage the ContributionLimits of an event"""
 
@@ -496,7 +496,7 @@ class RHManageContributionLimits(RHManageContributionsBase):
             track_type_limits += [{"title": self.event.tracks[tr-1].title, "type_limits": type_limits}]
             type_limits = []
         form = TrackTypeLimitsForm(track_type_limits=track_type_limits)
-        if request.method == 'POST':
+        if request.method == 'POST' or form.validate_on_submit():
             for tr in range(1, tr_count+1):
                 for ty in range(1, ty_count+1):
                     limit = ContributionLimit.query.filter_by(track_id=tr, type_id=ty).first()
@@ -523,12 +523,6 @@ class RHManageContributionLimits(RHManageContributionsBase):
             flash(_('The limitations have been successfully updated.'), 'success')
             return jsonify_data()
 
-        if form.validate():
-            return redirect(url_for('login'))
-
-        if form.validate_on_submit():
-            #raise Exception("mani")
-            return jsonify_data()
         return jsonify_template('events/contributions/management/limits_dialog.html', form=form, event=self.event,
                                contrib_types=contrib_types)
 
