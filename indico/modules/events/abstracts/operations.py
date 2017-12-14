@@ -205,18 +205,11 @@ def delete_abstract(abstract, delete_contrib=False):
 def judge_abstract(abstract, abstract_data, judgment, judge, contrib_session=None, merge_persons=False,
                    send_notifications=False):
     from indico.modules.events.tracks.models.tracks import Track
-    #raise Exception("Event id is '%s' " % abstract.event.id)
-    #raise Exception("Serializer for '%s' does not exist!" % Abstract.query.filter_by(event_id=1, submitted_contrib_type_id=3).count())
     abstract.judge = judge
     abstract.judgment_dt = now_utc()
     abstract.judgment_comment = abstract_data['judgment_comment']
     log_data = {'Judgment': orig_string(judgment.title)}
     if judgment == AbstractAction.accept:
-                     #.filter(Abstract.title.like('s'))
-					 #.count())
-                     #.options(load_only('id', 'title'))
-                     #.all())
-        #raise Exception("Serializer for '%s' does not exist!" % Abstract.query.with_parent(abstract.event).filter(abstract.submitted_contrib_type == 3).count())
         abstract.state = AbstractState.accepted
         abstract.accepted_track = abstract_data.get('accepted_track')
         if abstract_data.get('override_contrib_type') or abstract_data.get('accepted_contrib_type'):
@@ -230,26 +223,8 @@ def judge_abstract(abstract, abstract_data, judgment, judge, contrib_session=Non
         if abstract.accepted_contrib_type:
             log_data['Type'] = abstract.accepted_contrib_type.name
 
-        #abstract.state = AbstractState.submitted
-        #raise Exception("Limit is eceeded '%s' does not exist!" % abstract.accepted_track.id)#Track.query.filter_by(title=abstract.accepted_track.title).count())
-        
-        #Abstract.query.filter_by(event_id=abstract.event.id, accepted_contrib_type_id=abstract.accepted_contrib_type.id).count() #number of all the accepted abstracts of this type on this event, this is for all tracks limitation on types
-        #Abstract.query.filter_by(event_id=abstract.event.id, accepted_track_id=abstract.accepted_track.id, accepted_contrib_type_id=abstract.accepted_contrib_type.id).count() #number of the accepted abstracts of this type for this track on this event, this is for the specific track limitation on types
-        
-        #from flask import flash, redirect, session
-        #from indico.util.i18n import _
-        #flash(_("Abstract reviewing roles have been updated."), 'success')
         from indico.modules.events.contributions.models.limits import ContributionLimit
-        #limits = ContributionLimit.query.filter_by(event_id=abstract.event.id, track_id=(None if not abstract.accepted_track else abstract.accepted_track.id), type_id=abstract.accepted_contrib_type.id).first()
-        #val = limits.value
-
         from sqlalchemy import func
-        #if abstract.accepted_track:
-            #limit = ContributionLimit.query.filter_by(event_id=abstract.event.id, track_id=abstract.accepted_track.id, type_id=abstract.accepted_contrib_type.id).first().value
-            #val = Abstract.query.filter_by(event_id=abstract.event.id, accepted_track_id=abstract.accepted_track.id, accepted_contrib_type_id=abstract.accepted_contrib_type.id).count()
-        #else:
-            #limit = ContributionLimit.query.with_entities(func.sum(ContributionLimit.value).label("Sum")).filter_by(event_id=abstract.event.id, type_id=abstract.accepted_contrib_type.id).first()[0]
-            #val = Abstract.query.filter_by(event_id=abstract.event.id, accepted_contrib_type_id=abstract.accepted_contrib_type.id).count()  
 
         if not abstract.accepted_contrib_type:
             raise Exception("The contribution type is missing.")
@@ -257,7 +232,7 @@ def judge_abstract(abstract, abstract_data, judgment, judge, contrib_session=Non
         limit = ContributionLimit.query.filter_by(event_id=abstract.event.id, track_id=(None if not abstract.accepted_track else abstract.accepted_track.id), type_id=abstract.accepted_contrib_type.id).first().value
         val = Abstract.query.filter_by(event_id=abstract.event.id, accepted_track_id=(None if not abstract.accepted_track else abstract.accepted_track.id), accepted_contrib_type_id=abstract.accepted_contrib_type.id).count()
 
-        if True: #val >= limit+1: #Abstract.query.filter_by(event_id=abstract.event.id, accepted_track_id=(None if not abstract.accepted_track else abstract.accepted_track.id), accepted_contrib_type_id=abstract.accepted_contrib_type.id).count() >= 1+1:
+        if val >= limit+1:
             raise Exception("Abstract admission limit of <b>%s</b> , %s has been reached for type <i>'%s'</i> on track <i>'%s'</i>."
             " Please either reset a previous judgement or repport this.'%s'" % (limit, val, abstract.accepted_contrib_type.name,
             'No track' if not abstract.accepted_track else abstract.accepted_track.title, Abstract.query.filter_by
