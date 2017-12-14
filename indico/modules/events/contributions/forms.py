@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 from datetime import timedelta
 
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.fields import StringField, TextAreaField
+from wtforms.fields import StringField, TextAreaField, IntegerField, FormField , FieldList
 from wtforms.validators import DataRequired, ValidationError
 
 from indico.core.db import db
@@ -200,3 +200,28 @@ class ContributionTypeForm(IndicoForm):
             query = query.filter(ContributionType.id != self.contrib_type.id)
         if query.count():
             raise ValidationError(_("A contribution type with this name already exists"))
+
+#from wtforms.fields.core import BooleanField, FieldList, FloatField, FormField, IntegerField, RadioField, StringField
+#from wtforms import Form
+class LimitEntryForm(IndicoForm):
+    #label = HiddenField()
+    limit = IntegerField(default=None)
+
+    #def __init__(self, *args, **kwargs):
+    #    super(LimitEntryForm, self).__init__(*args, **kwargs)
+        #self.limit.label = self.label
+        #if 'obj' in kwargs and kwargs['obj'] is not None:
+        #    self.limit.label.text = kwargs['obj'].label.name
+
+    #def validate_name(self, field):
+    #    if field.data:
+    #        if room and room != self.vc_room:
+    #            raise ValidationError(_("There is already a room with this name"))
+
+class TypeLimitsForm(IndicoForm):
+    """A form for one or more addresses"""
+    #title = HiddenField()
+    type_limits = FieldList(FormField(LimitEntryForm), min_entries=1)
+
+class TrackTypeLimitsForm(IndicoForm):
+    track_type_limits = FieldList(FormField(TypeLimitsForm), min_entries=1)

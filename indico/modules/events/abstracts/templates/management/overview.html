@@ -40,7 +40,7 @@
                 <div class="label">
                     {%- trans %}Fields and types{% endtrans -%}
                 </div>
-                {%- trans %}Configure the contribution types and abstract fields.{% endtrans -%}
+                {%- trans %}Configure the contribution types, limitations and abstract fields.{% endtrans -%}
             </div>
             <div class="toolbar">
                 <a href="#" class="i-button"
@@ -48,6 +48,12 @@
                    data-title="{% trans %}Manage contribution types{% endtrans %}"
                    data-ajax-dialog>
                     {%- trans %}Contribution types{% endtrans -%}
+                </a>
+                <a href="#" class="i-button"
+                   data-href="{{ url_for('contributions.manage_limitations', event) }}"
+                   data-title="{% trans %}Manage contribution limitations{% endtrans %}"
+                   data-ajax-dialog>
+                    {%- trans %}Limitations{% endtrans -%}
                 </a>
                 <a href="#" class="i-button js-dialog-action"
                    data-title="{% trans %}Manage fields{% endtrans %}"

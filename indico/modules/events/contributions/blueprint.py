@@ -99,6 +99,11 @@ _bp.add_url_rule('/manage/contributions/types/<int:contrib_type_id>', 'manage_ty
 _bp.add_url_rule('/manage/contributions/types/<int:contrib_type_id>/delete', 'delete_type',
                  management.RHDeleteContributionType, methods=('POST',))
 
+# Contribution limitations
+_bp.add_url_rule('/manage/contributions/limits/', 'manage_limitations', management.RHManageContributionLimits, methods=('GET', 'POST'))
+#_bp.add_url_rule('/manage/contributions/limits/update', 'update_limitations', management.RHUpdateContributionLimits,
+#                 methods=('GET', 'POST'))
+
 # Custom contribution fields
 _bp.add_url_rule('/manage/contributions/fields/', 'manage_fields', management.RHManageContributionFields)
 _bp.add_url_rule('/manage/contributions/fields/create/<field_type>', 'create_field',

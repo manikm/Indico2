@@ -18,7 +18,7 @@ from __future__ import unicode_literals
 
 from operator import attrgetter
 
-from flask import flash, jsonify, redirect, request, session
+from flask import flash, jsonify, redirect, request, session, render_template
 from sqlalchemy.orm import undefer
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
@@ -32,7 +32,7 @@ from indico.modules.events.contributions import get_contrib_field_types
 from indico.modules.events.contributions.controllers.common import ContributionListMixin
 from indico.modules.events.contributions.forms import (ContributionDurationForm, ContributionProtectionForm,
                                                        ContributionStartDateForm, ContributionTypeForm,
-                                                       SubContributionForm)
+                                                       SubContributionForm, TrackTypeLimitsForm)
 from indico.modules.events.contributions.lists import ContributionListGenerator
 from indico.modules.events.contributions.models.contributions import Contribution
 from indico.modules.events.contributions.models.fields import ContributionField
@@ -477,6 +477,60 @@ class RHManageContributionTypes(RHManageContributionsBase):
         return jsonify_template('events/contributions/management/types_dialog.html', event=self.event,
                                 contrib_types=contrib_types)
 
+from indico.modules.events.contributions.models.limits import ContributionLimit
+class RHManageContributionLimits(RHManageContributionsBase):
+    """Dialog to manage the ContributionLimits of an event"""
+
+    def _process(self):
+        contrib_limits = self.event.contribution_limits.all()
+        contrib_types = self.event.contribution_types.all()
+        type_limits = []
+        track_type_limits = []
+        for tr in self.event.tracks:
+            for ty in contrib_types:
+                track_type_limit = [cont for cont in contrib_limits if cont.type_id == ty.id and cont.track_id == tr.id]
+                limit = track_type_limit[0] if len(track_type_limit) else None
+                type_limits += [{"limit": None if limit is None else limit.value, "label": ty.name}]
+            track_type_limits += [{"title": tr.title, "type_limits": type_limits}]
+            type_limits = []
+
+        #flash(_('The settings for "{}" have been savedd.').format('mani'), 'success')
+        form = TrackTypeLimitsForm(track_type_limits=track_type_limits)
+        if request.method == 'POST':
+            #raise Exception(form.data)
+            #flash(_('The settings for "{}" have been savedd.'+form.data[track_type_limits][type_limits][0]).format('mani'), 'success')
+            for tr in self.event.tracks:
+                for ty in contrib_types:
+                    limit = ContributionLimit.query.filter_by(track_id=tr.id, type_id=ty.id).first()
+                    val = form.data['track_type_limits'][tr.id-1]['type_limits'][ty.id-1]['limit']
+                    if val:
+                        if limit:
+                            if limit.value != val:
+                                limit.value = form.data['track_type_limits'][tr.id-1]['type_limits'][ty.id-1]['limit']
+                        else:
+                            lim = ContributionLimit()
+                            lim.event_id = self.event.id
+                            lim.track_id = tr.id
+                            lim.type_id = ty.id
+                            lim.value = val
+                            db.session.add(lim)
+                        db.session.commit()
+            #flash(form.data['track_type_limits'][0]['type_limits'][0]['limit'])
+            #flash(limit)
+            return jsonify_data()
+        if form.validate():
+            return redirect(url_for('login'))
+
+        if form.validate_on_submit():
+            #raise Exception("mani")
+            return jsonify_data()
+        return jsonify_template('events/contributions/management/limits_dialog.html', form=form, event=self.event,
+                               contrib_types=contrib_types)
+
+
+class RHUpdateContributionLimits(RHManageContributionsBase):
+    def _process(self):
+        return jsonify_data()
 
 class RHManageContributionTypeBase(RHManageContributionsBase):
     """Manage a contribution type of an event"""
