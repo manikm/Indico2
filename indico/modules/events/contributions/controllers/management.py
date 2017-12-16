@@ -18,7 +18,7 @@ from __future__ import unicode_literals
 
 from operator import attrgetter
 
-from flask import flash, jsonify, redirect, request, session, render_template
+from flask import flash, jsonify, redirect, request, session
 from sqlalchemy.orm import undefer
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
@@ -522,7 +522,6 @@ class RHManageContributionLimits(RHManageContributionsBase):
                 db.session.commit()
             flash(_('The limitations have been successfully updated.'), 'success')
             return jsonify_data()
-
         return jsonify_template('events/contributions/management/limits_dialog.html', form=form, event=self.event,
                                contrib_types=contrib_types)
 
