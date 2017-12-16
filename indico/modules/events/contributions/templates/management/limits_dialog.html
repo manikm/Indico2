@@ -1,0 +1,40 @@
+{% extends 'layout/dialog_base.html' %}
+{% from 'forms/_form.html' import form_header, form_rows, form_footer %}
+{% from 'message_box.html' import message_box %}
+
+{% macro render_field(field, label) %}
+		<span>
+			{{ label }}:&nbsp;{{ field }}
+		</span>
+{% endmacro %}
+
+{% block content %}
+	<form method="POST" style="max-width:800px">
+		<div class="js-assign-dialog">
+			<ul class="role-list">
+			{% for track_type_limit in form.track_type_limits %}
+				<li class="i-box no-shadow js-track-config highlight">
+					<div id="" class="i-box-header">
+						<span class="i-box-title">
+						{% print(event.tracks[loop.index-1].title) %}
+						</span>
+					</div>
+					{% for limit_Entry in track_type_limit.type_limits %}
+						{{ render_field(limit_Entry.limit, contrib_types[loop.index-1].name) }}
+					{% endfor %}
+				</li>
+			{% endfor %}
+			</ul>
+			{{ form.csrf_token }}
+			{{ form.name }}
+            <div style="margin-top:10px">
+				<input class="i-button big highlight" type="submit"
+					   data-disabled-until-change value="{% trans %}Apply{% endtrans %}">
+				<button type="button" class="i-button big" data-button-back>{% trans %}Cancel{% endtrans %}</button>
+			</div>       
+		</div>
+    </form>
+{% endblock %}
+
+
+
