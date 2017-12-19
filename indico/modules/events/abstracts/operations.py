@@ -239,7 +239,7 @@ def judge_abstract(abstract, abstract_data, judgment, judge, contrib_session=Non
 
         if limit and val >= limit+1:
             raise Exception("Abstract admission limit of <b>%s</b> has been reached for type <i>'%s'</i> on track <i>'%s'</i>."
-            " Please either reset a previous judgement or repport this." % (limit, abstract.accepted_contrib_type.name,
+            " Please either reset a previous judgement or report this." % (limit, abstract.accepted_contrib_type.name,
             'No track' if not abstract.accepted_track else abstract.accepted_track.title))
 
     elif judgment == AbstractAction.reject:
