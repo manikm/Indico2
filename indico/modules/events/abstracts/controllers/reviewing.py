@@ -136,6 +136,21 @@ class RHDisplayAbstractListBase(RHAbstractsBase):
             raise Forbidden
 
 
+class RHDisplayOpenAbstractListBase(RHAbstractsBase):
+    """Base class for abstract list operations without permission check"""
+
+    normalize_url_spec = {
+        'locators': {
+            lambda self: self.track
+        }
+    }
+
+    def _process_args(self):
+        RHAbstractsBase._process_args(self)
+        self.track = Track.get_one(request.view_args['track_id'])
+        self.list_generator = AbstractListGeneratorDisplay(event=self.event, track=self.track)
+
+
 class RHSubmitAbstractReview(RHAbstractBase):
     """Review an abstract in a specific track"""
 
@@ -247,7 +262,7 @@ class RHDisplayReviewableTracks(RHAbstractsBase):
                                                            tracks=get_user_tracks(self.event, session.user))
 
 
-class RHDisplayReviewableTrackAbstracts(DisplayAbstractListMixin, RHDisplayAbstractListBase):
+class RHDisplayReviewableTrackAbstracts(DisplayAbstractListMixin, RHDisplayOpenAbstractListBase):
     view_class = WPDisplayAbstractsReviewing
     template = 'display/abstracts.html'
 

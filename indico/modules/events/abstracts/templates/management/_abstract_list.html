@@ -112,9 +112,20 @@
                                     {{- abstract.friendly_id -}}
                                 </td>
                                 <td class="i-table" data-searchable="{{ abstract.title | lower }}">
-                                    <a class="js-mathjax" href="{{ url_for('.display_abstract', abstract) }}">
-                                        {{- abstract.title -}}
-                                    </a>
+                                    {% set track = abstract.accepted_track if (abstract.state.name == 'accepted') else abstract.submitted_track %}
+                                    {% if context_track is not none %}
+                                        {% if context_track.can_convene(session.user) or context_track.can_review_abstracts(session.user) %}
+                                            <a class="js-mathjax" href="{{ url_for('.display_abstract', abstract) }}">
+                                                {{- abstract.title -}}
+                                            </a>
+                                        {% else %}
+                                            {{- abstract.title -}}
+                                        {% endif %}
+                                    {% else %}
+                                        <a class="js-mathjax" href="{{ url_for('.display_abstract', abstract) }}">
+                                            {{- abstract.title -}}
+                                        </a>
+                                    {% endif %}
                                 </td>
                                 {% for item in static_columns %}
                                     {% if item.id == 'state' %}
