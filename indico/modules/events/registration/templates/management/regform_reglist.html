@@ -207,5 +207,11 @@
 
     <script>
         setupRegistrationList();
+        function receiveMessage(event)
+        {
+		  var res = event.data.split(",");
+		  CKEDITOR.tools.callFunction(Number(res[0]),res[1])
+        }
+        window.addEventListener("message", receiveMessage, false);
     </script>
 {% endblock %}

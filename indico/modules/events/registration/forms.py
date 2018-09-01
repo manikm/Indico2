@@ -230,7 +230,7 @@ class EmailRegistrantsForm(IndicoForm):
                                   description=_("Beware, addresses in this field will receive one mail per "
                                                 "registrant."))
     subject = StringField(_("Subject"), [DataRequired()])
-    body = TextAreaField(_("Email body"), [DataRequired()], widget=CKEditorWidget(simple=True))
+    body = TextAreaField(_("Email body"), [DataRequired()], widget=CKEditorWidget(simple=True, images=True))
     recipients = IndicoEmailRecipientsField(_('Recipients'))
     copy_for_sender = BooleanField(_('Send copy to me'), widget=SwitchWidget(),
                                    description=_('Send copy of each email to my mailbox'))

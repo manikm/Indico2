@@ -1,0 +1,87 @@
+{% extends 'layout/dialog_base.html' %}
+
+{% from 'forms/_form.html' import form_header, form_footer, form_rows %}
+
+{% block title %}
+    {%- trans %}Images{% endtrans -%}
+{% endblock %}
+
+{% block content %}
+    {% if not event.is_locked %}
+        <h2>{% trans %}Upload images{% endtrans %}</h2>
+
+        {{ form_header(form, id='upload-images', classes='full-width', orientation='vertical', action=url_for('.images_dlg_upload', event)) }}
+        {{ form_rows(form, skip_labels=true) }}
+
+        {% call form_footer(attach_form) %}
+            <button class="i-button highlight js-dropzone-upload icon-upload right" data-disabled-until-change>
+                {% trans %}Upload{% endtrans %}
+            </button><br />
+
+        {% endcall %}
+    {% endif %}
+
+    <div id="" class="" style="margin-right:13px">
+		<button class="i-button right" style="padding:9px; padding-bottom:10px" onclick="window.close();">Cancel</button>
+		<button id="btn-select" class="i-button highlight icon-checkmark right" style="padding:8px" disabled="disabled">Select</button>
+	</div>
+
+    <h2>{% trans %}Existing Images{% endtrans %}</h2>
+    {% include 'events/layout/image_list_dlg.html' %}
+
+    <script>
+        $(document).ready(function() {
+            var vars = {};
+			var selected;
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+
+            var opener = window.opener;
+            var funcNum = vars.CKEditorFuncNum
+            
+			$('#btn-select').on('click', function() {
+				opener.postMessage(funcNum + ',' + window.selected, "*");
+				window.close();
+			});
+
+            {% if not event.is_locked %}
+                var dropzone = Dropzone.forElement('#upload-images');
+
+                dropzone.on("success", function(e, response) {
+                    setTimeout(function() {
+                        dropzone.removeAllFiles();
+                    }, 2000);
+                    $('.image-container').html(response.image_list);
+                    handleFlashes(response, true);
+                });
+
+                $('#upload-images').on('submit', function(evt) {
+                    $.each(dropzone.getRejectedFiles(), function(i, file) {
+                        dropzone.removeFile(file);
+                    });
+                    // prevent regular form submission - when selecting only invalid files the form was
+                    // submitted normally (not even ajax) resulting in ugly json being shown to the user
+                    evt.preventDefault();
+                });
+            {% endif %}
+
+            $('.image-container').on('indico:confirmed', '.menu .delete', function(e) {
+                var $this = $(this);
+                e.preventDefault();
+
+                $.ajax({
+                    url: $this.data('href'),
+                    method: $this.data('method'),
+                    complete: IndicoUI.Dialogs.Util.progress(),
+                    error: handleAjaxError,
+                    success: function(data) {
+                        $('.image-container').html(data.image_list);
+                        handleFlashes(data, true);
+                    }
+                });
+            });
+
+        });
+    </script>
+{% endblock %}

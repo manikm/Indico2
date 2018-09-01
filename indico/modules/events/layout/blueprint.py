@@ -17,7 +17,7 @@
 from __future__ import unicode_literals
 
 from indico.modules.events.layout.compat import compat_image, compat_page
-from indico.modules.events.layout.controllers.images import RHImageDelete, RHImageDisplay, RHImages, RHImageUpload
+from indico.modules.events.layout.controllers.images import RHImageDelete, RHImageDlgDelete, RHImageDisplay, RHImages, RHImagesDlg, RHImageUpload, RHImageDlgUpload
 from indico.modules.events.layout.controllers.layout import (RHLayoutCSSDelete, RHLayoutCSSDisplay, RHLayoutCSSPreview,
                                                              RHLayoutCSSSaveTheme, RHLayoutCSSUpload, RHLayoutEdit,
                                                              RHLayoutLogoDelete, RHLayoutLogoUpload,
@@ -54,6 +54,9 @@ _bp.add_url_rule('/logo', 'delete_logo', RHLayoutLogoDelete, methods=('DELETE',)
 _bp.add_url_rule('/images/', 'images', RHImages)
 _bp.add_url_rule('/images/upload', 'images_upload', RHImageUpload, methods=('POST',))
 _bp.add_url_rule('/images/<int:image_id>-<filename>', 'image_delete', RHImageDelete, methods=('DELETE',))
+_bp.add_url_rule('/images/dlg', 'images_dlg', RHImagesDlg)
+_bp.add_url_rule('/images/dlg/upload', 'images_dlg_upload', RHImageDlgUpload, methods=('POST',))
+_bp.add_url_rule('/images/dlg/<int:image_id>-<filename>', 'image_dlg_delete', RHImageDlgDelete, methods=('DELETE',))
 _bp.add_url_rule('!/event/<confId>/<slug>.css', 'css_display', RHLayoutCSSDisplay)
 
 

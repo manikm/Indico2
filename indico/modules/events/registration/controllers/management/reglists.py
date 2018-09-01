@@ -204,8 +204,9 @@ class RHRegistrationEmailRegistrants(RHRegistrationsActionBase):
 
     def _send_emails(self, form):
         for registration in self.registrations:
-            email_body = replace_placeholders('registration-email', form.body.data, regform=self.regform,
-                                              registration=registration)
+            #email_body = replace_placeholders('registration-email', form.body.data, regform=self.regform,
+            #                                  registration=registration)
+            email_body = '<img src="'+ request.url_root + 'event/' + str(self.event.id) + '/images/' + 'event-banner.png' + '" alt="">' + form.body.data
             email_subject = replace_placeholders('registration-email', form.subject.data, regform=self.regform,
                                                  registration=registration)
             template = get_template_module('events/registration/emails/custom_email.html',

@@ -261,6 +261,10 @@ function initializeEditor( wrapper, editorId, text, callbacks, width, height, si
                 'Monospace/"Liberation Mono", monospace'
             ].join(';'),
             contentsCss: _.union(CKEDITOR.getUrl('contents.css'), Indico.Urls.FontSassBundle),
+			filebrowserImageBrowseUrl: '/event/'+location.pathname.split('/')[2]+'/manage/layout/images/dlg',
+            //filebrowserWindowFeatures:'location=no,menubar=no,toolbar=no,dependent=yes,minimizable=no,modal=yes,alwaysRaised=yes,resizable=no,scrollbars=no',
+            filebrowserWindowHeight: '820',
+            filebrowserWindowWidth: '820',
             toolbarGroups: [
                 {name: 'clipboard', groups: ['clipboard', 'undo']},
                 {name: 'editing', groups: ['find', 'selection', 'spellchecker']},

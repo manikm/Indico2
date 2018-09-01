@@ -33,11 +33,48 @@ from indico.modules.events.management.controllers import RHManageEventBase
 from indico.util.fs import secure_filename
 from indico.util.i18n import _, ngettext
 from indico.web.util import jsonify_data
+from indico.web.views import WPDecorated, WPJinjaMixin
+from indico.modules.events.models.events import EventType
+from indico.util.string import strip_tags, to_unicode
+
+
+class WPImagesDlg(WPJinjaMixin, WPDecorated):
+    MANAGEMENT = True
+    ALLOW_JSON = False
+    template_prefix = 'events/layout/'
+    sidemenu_option = 'images'
+
+    def __init__(self, rh, event_, active_menu_item=None, **kwargs):
+        assert event_ == kwargs.setdefault('event', event_)
+        self.event = event_
+        self.title = strip_tags(self.event.title)
+        kwargs['base_layout_params'] = {
+            'active_menu_item': active_menu_item or self.sidemenu_option,
+            'event_types': [(et.name, et.title) for et in EventType]
+        }
+        WPDecorated.__init__(self, rh, **kwargs)
+
+    def _getHeader(self):
+        return ''
+
+    def _getTabControl(self):
+        return None
+
+    def _getFooter(self):
+        return ''
+
+    def _getBody(self, params):
+        return self._getPageContent(params)
 
 
 def _render_image_list(event):
     images = ImageFile.query.with_parent(event).all()
     return render_template('events/layout/image_list.html', images=images)
+
+
+def _render_image_list_dlg(event):
+    images = ImageFile.query.with_parent(event).all()
+    return render_template('events/layout/image_list_dlg.html', images=images)
 
 
 class RHManageImagesBase(RHManageEventBase):
@@ -51,7 +88,15 @@ class RHImages(RHManageImagesBase):
         return WPImages.render_template('images.html', self.event, images=images, form=form)
 
 
+class RHImagesDlg(RHManageImagesBase):
+    def _process(self):
+        form = AddImagesForm()
+        images = ImageFile.query.with_parent(self.event).all()
+        return WPImagesDlg.render_template('images_dlg.html', self.event, images=images, form=form)
+
+
 class RHImageUpload(RHManageImagesBase):
+    _dlg = False
     def _process(self):
         files = request.files.getlist('image')
         num = 0
@@ -82,10 +127,19 @@ class RHImageUpload(RHManageImagesBase):
             signals.event_management.image_created.send(image, user=session.user)
         flash(ngettext("The image has been uploaded", "{count} images have been uploaded", num)
               .format(count=len(files)), 'success')
+        if (self._dlg):
+            return jsonify_data(image_list=_render_image_list_dlg(self.event))
         return jsonify_data(image_list=_render_image_list(self.event))
 
 
+class RHImageDlgUpload(RHImageUpload):
+    def __init__(self, *args, **kwargs):
+        self._dlg = True
+        super(RHImageDlgUpload, self).__init__(*args, **kwargs)
+
+
 class RHImageDelete(RHManageImagesBase):
+    _dlg = False
     def _process_args(self):
         RHManageImagesBase._process_args(self)
         self.image = (ImageFile.query.with_parent(self.event)
@@ -96,7 +150,15 @@ class RHImageDelete(RHManageImagesBase):
         signals.event_management.image_deleted.send(self.image, user=session.user)
         db.session.delete(self.image)
         flash(_("The image '{}' has been deleted").format(self.image.filename), 'success')
+        if (self._dlg):
+            return  jsonify_data(image_list=_render_image_list_dlg(self.event))
         return jsonify_data(image_list=_render_image_list(self.event))
+
+
+class RHImageDlgDelete(RHImageDelete):
+    def __init__(self, *args, **kwargs):
+        self._dlg = True
+        super(RHImageDlgDelete, self).__init__(*args, **kwargs)
 
 
 class RHImageDisplay(RHDisplayEventBase):
