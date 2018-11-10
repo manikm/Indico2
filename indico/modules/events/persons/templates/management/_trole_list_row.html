@@ -1,0 +1,45 @@
+{% macro render_person_row(user_data) %}
+    {% set user = user_data.user %}
+    <td class="i-table thin-column hide-if-locked">
+        <input type="checkbox" value="{{ user.id }}" class="select-row" name="user_id" {{ 'disabled' if not user.email }}>
+    </td>
+    <td class="i-table name-column">
+        {{ user.display_full_name }}
+    </td>
+    <td class="i-table email-column">
+        {{ user.email }}
+    </td>
+    <td class="i-table affiliation-column">
+        {{ user.affiliation }}
+    </td>
+
+
+        <td class="i-table">
+            <span class="i-label js-count-label {{ 'no-role' if not user_data.tracks_reviewer }}"
+                  data-items="{{ user_data.tracks_reviewer | tojson | forceescape }}">
+                {% trans %}Reviewer{% endtrans %}
+                <span class="badge">
+                    {{ user_data.tracks_reviewer | length }}
+                </span>
+            </span>
+        </td>
+        <td class="i-table">
+            <span class="i-label js-count-label {{ 'no-role' if not user_data.tracks_convener }}"
+                  data-items="{{ user_data.tracks_convener | tojson | forceescape }}">
+                {% trans %}Convener{% endtrans %}
+                <span class="badge">
+                    {{ user_data.tracks_convener | length }}
+                </span>
+            </span>
+        </td>
+
+
+    <!-- <td class="i-table">
+        <a class="i-link icon-edit" title="{% trans %}Edit information{% endtrans %}"
+            data-href="url_for('persons.edit_person', user)"
+            data-title="{% trans %}Edit information{% endtrans %}"
+            data-update="#person-{{ user.id }}"
+            data-highlight-update
+            data-ajax-dialog></a>
+    </td> -->
+{% endmacro %}

@@ -18,7 +18,7 @@ from __future__ import unicode_literals
 
 from indico.modules.events.persons.controllers import (RHEditEventPerson, RHEmailEventPersons,
                                                        RHGrantModificationRights, RHGrantSubmissionRights,
-                                                       RHPersonsList, RHRevokeSubmissionRights)
+                                                       RHPersonsList, RHRevokeSubmissionRights, RHTroleList)
 from indico.web.flask.wrappers import IndicoBlueprint
 
 
@@ -32,6 +32,9 @@ _bp.add_url_rule('/persons/grant-modification', 'grant_modification_rights', RHG
                  methods=('POST',))
 _bp.add_url_rule('/persons/revoke-submission', 'revoke_submission_rights', RHRevokeSubmissionRights,
                  methods=('POST',))
+
+
+_bp.add_url_rule('/roles/', 'trole_list', RHTroleList)
 
 
 # EventPerson operations

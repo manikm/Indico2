@@ -35,7 +35,10 @@ from indico.modules.events.persons.operations import update_person
 from indico.modules.events.persons.views import WPManagePersons
 from indico.modules.events.sessions.models.principals import SessionPrincipal
 from indico.modules.events.sessions.models.sessions import Session
+from indico.core.db import db
 from indico.modules.users import User
+from indico.modules.events.tracks.models.tracks import Track
+from indico.modules.events import Event
 from indico.util.date_time import now_utc
 from indico.util.i18n import _, ngettext
 from indico.util.placeholders import replace_placeholders
@@ -215,6 +218,43 @@ class RHEmailEventPersons(RHManageEventBase):
         if not user_ids:
             return []
         return User.query.filter(User.id.in_(user_ids), User.email != '').all()
+
+
+class RHTroleList(RHManageEventBase):
+    def _process(self):
+        users = defaultdict(lambda: {'tracks_convener': defaultdict(dict),
+                                     'tracks_reviewer': defaultdict(dict),
+                                     'roles': defaultdict(lambda: False)})
+
+        track_conveners_query = (db.session.query(Event, Track, User)
+                             .join(Event.tracks)
+                             .join(Track.conveners)
+                             .filter(Track.event_id == self.event.id).all())
+                       
+        track_reviewers_query = (db.session.query(Event, Track, User)
+                             .join(Event.tracks)
+                             .join(Track.abstract_reviewers)
+                             .filter(Track.event_id == self.event.id).all())
+
+
+        for track_user in track_conveners_query:
+            data = users[track_user.User.email or track_user.User.id]
+            data['user'] = track_user.User
+            data['tracks_convener'][track_user.Track.id] = {'title': track_user.Track.title}
+            data['roles']['convener'] = True
+
+
+        for track_user in track_reviewers_query:
+            data = users[track_user.User.email or track_user.User.id]
+            data['user'] = track_user.User
+            data['tracks_reviewer'][track_user.Track.id] = {'title': track_user.Track.title}
+            data['roles']['reviewer'] = True
+
+        users = {email: data for email, data in users.viewitems() if any(data['roles'].viewvalues())}
+        user_list = sorted(users.viewvalues(), key=lambda x: x['user'].display_full_name.lower())
+
+        return WPManagePersons.render_template('management/trole_list.html', self.event,
+                                               users=user_list)
 
 
 class RHGrantSubmissionRights(RHManageEventBase):

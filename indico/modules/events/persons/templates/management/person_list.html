@@ -4,7 +4,10 @@
 {% from 'message_box.html' import message_box %}
 
 {% block title %}
-    {% trans %}Event Roles{% endtrans %}
+    <ul class="nav nav-tabs" style="display:inline; border:none;">
+      <li class="active"><a href="#">{% trans %}Event Roles{% endtrans %}</a></li>
+      <li><a href="../../manage/roles">{% trans %}Track Roles{% endtrans %}</a></li>
+    </ul>
 {% endblock %}
 
 {% block content %}
