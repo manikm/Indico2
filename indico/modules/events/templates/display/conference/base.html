@@ -88,6 +88,14 @@
                         </ul>
                     </div>
                 {%- endif %}
+
+                {% if event.sponsors_info %}
+                    <div class="support_box">
+                        <div class="text">
+                            {{ event.sponsors_info|rich_markup }}
+                        </div>
+                    </div>
+                {% endif %}
             </div>
             <div class="confBodyBox clearfix {{ 'event-locked' if event.is_locked }}">
                 <div class="mainContent">

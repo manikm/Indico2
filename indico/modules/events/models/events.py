@@ -417,6 +417,7 @@ class Event(SearchableTitleMixin, DescriptionMixin, LocationMixin, ProtectionMan
     end_dt_override = _EventSettingProperty(event_core_settings, 'end_dt_override')
     organizer_info = _EventSettingProperty(event_core_settings, 'organizer_info')
     additional_info = _EventSettingProperty(event_core_settings, 'additional_info')
+    sponsors_info = _EventSettingProperty(event_core_settings, 'sponsors_info')
     contact_title = _EventSettingProperty(event_contact_settings, 'title')
     contact_emails = _EventSettingProperty(event_contact_settings, 'emails')
     contact_phones = _EventSettingProperty(event_contact_settings, 'phones')

@@ -173,6 +173,17 @@
 {% endmacro %}
 
 
+{% macro render_section_sponsors_info(event, with_container=true) %}
+    {% call render_section(event, 'sponsors_info', 'icon-info', '.edit_sponsors_info', _('Edit sponsors info'),
+                           with_container=with_container) %}
+        <dl class="i-data-list">
+                <dt>{% trans %}Sponsors info{% endtrans %}</dt>
+                <dd>{{ with_default(event.sponsors_info|striptags|truncate(200)) }}</dd>
+        </dl>
+    {% endcall %}
+{% endmacro %}
+
+
 {% macro render_section_classification(event, with_container=true) %}
     {% set edit_cls_title = _('Edit keywords / references') if event.type == 'meeting' else _('Edit keywords') %}
     {% call render_section(event, 'classification', 'icon-tag', '.edit_classification', edit_cls_title,
@@ -220,6 +231,9 @@
     {% endif %}
     {% if section is none or section == 'contact_info' %}
         {{ render_section_contact_info(event, with_container=with_container) }}
+    {% endif %}
+    {% if section is none or section == 'sponsors_info' %}
+        {{ render_section_sponsors_info(event, with_container=with_container) }}
     {% endif %}
     {% if section is none or section == 'classification' %}
         {{ render_section_classification(event, with_container=with_container) }}

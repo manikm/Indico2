@@ -98,7 +98,7 @@ def create_event(category, event_type, data, add_creator_as_manager=True, featur
 def update_event(event, update_timetable=False, **data):
     assert set(data.viewkeys()) <= {'title', 'description', 'url_shortcut', 'location_data', 'keywords',
                                     'person_link_data', 'start_dt', 'end_dt', 'timezone', 'keywords', 'references',
-                                    'organizer_info', 'additional_info', 'contact_title', 'contact_emails',
+                                    'organizer_info', 'additional_info', 'sponsors_info', 'contact_title', 'contact_emails',
                                     'contact_phones', 'start_dt_override', 'end_dt_override'}
     old_person_links = event.person_links[:]
     if (update_timetable or event.type == EventType.lecture) and 'start_dt' in data:
@@ -179,6 +179,7 @@ def _log_event_update(event, changes, visible_person_link_changes=False):
         'contact_title': {'title': 'Contact/Support title', 'type': 'string'},
         'contact_emails': 'Contact emails',
         'contact_phones': 'Contact phone numbers',
+        'sponsors_info': 'Sponsors Info',
     }
     _split_location_changes(changes)
     if not visible_person_link_changes:

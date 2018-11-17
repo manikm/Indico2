@@ -212,6 +212,16 @@ class EventContactInfoForm(IndicoForm):
                 raise ValidationError(_('Invalid email address: {}').format(escape(email)))
 
 
+class EventSponsorsForm(IndicoForm):
+    sponsors_info = TextAreaField(_('Sponsors information'),
+                                    widget=CKEditorWidget(simple=True, images=True, height=250),
+                                    description=_("This text is displayed on the lower section of left menu."))
+
+    def __init__(self, *args, **kwargs):
+        self.event = kwargs.pop('event')
+        super(EventSponsorsForm, self).__init__(*args, **kwargs)
+
+
 class EventClassificationForm(IndicoForm):
     keywords = IndicoTagListField(_('Keywords'))
     references = ReferencesField(_('External IDs'), reference_class=EventReference)

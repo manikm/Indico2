@@ -22,7 +22,7 @@ from werkzeug.exceptions import Forbidden
 from indico.core import signals
 from indico.modules.events.management.controllers.base import RHManageEventBase
 from indico.modules.events.management.forms import (EventClassificationForm, EventContactInfoForm, EventDataForm,
-                                                    EventDatesForm, EventLocationForm, EventPersonsForm)
+                                                    EventDatesForm, EventLocationForm, EventPersonsForm, EventSponsorsForm)
 from indico.modules.events.management.util import flash_if_unregistered
 from indico.modules.events.management.views import WPEventSettings, render_event_management_header_right
 from indico.modules.events.operations import update_event
@@ -100,6 +100,11 @@ class RHEditEventContactInfo(RHEditEventDataBase):
 
     def render_form(self, form):
         return jsonify_template('events/management/event_contact_info.html', form=form)
+
+
+class RHEditEventSponsorsInfo(RHEditEventDataBase):
+    form_class = EventSponsorsForm
+    section_name = 'sponsors_info'
 
 
 class RHEditEventClassification(RHEditEventDataBase):

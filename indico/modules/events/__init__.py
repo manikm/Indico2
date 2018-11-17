@@ -243,6 +243,7 @@ def _event_cloned(old_event, new_event, **kwargs):
     new_event.keywords = old_event.keywords
     new_event.organizer_info = old_event.organizer_info
     new_event.additional_info = old_event.additional_info
+    new_event.sponsors_info = old_event.sponsors_info
     new_event.contact_title = old_event.contact_title
     new_event.contact_emails = old_event.contact_emails
     new_event.contact_phones = old_event.contact_phones

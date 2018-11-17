@@ -34,6 +34,8 @@ _bp.add_url_rule('/settings/location', 'edit_location', settings.RHEditEventLoca
 _bp.add_url_rule('/settings/persons', 'edit_persons', settings.RHEditEventPersons, methods=('GET', 'POST'))
 _bp.add_url_rule('/settings/contact-info', 'edit_contact_info', settings.RHEditEventContactInfo,
                  methods=('GET', 'POST'))
+_bp.add_url_rule('/settings/sponsors-info', 'edit_sponsors_info', settings.RHEditEventSponsorsInfo,
+                 methods=('GET', 'POST'))
 _bp.add_url_rule('/settings/classification', 'edit_classification', settings.RHEditEventClassification,
                  methods=('GET', 'POST'))
 # Actions
