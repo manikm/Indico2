@@ -215,7 +215,7 @@ class EventContactInfoForm(IndicoForm):
 class EventSponsorsForm(IndicoForm):
     sponsors_info = TextAreaField(_('Sponsors information'),
                                     widget=CKEditorWidget(simple=True, images=True, height=250),
-                                    description=_("This text is displayed on the lower section of left menu."))
+                                    description=_("This text is displayed on the lower section of left menu. <br />Keep the images width under 200 pixels in order to properly fit in."))
 
     def __init__(self, *args, **kwargs):
         self.event = kwargs.pop('event')
