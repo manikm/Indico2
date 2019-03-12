@@ -98,7 +98,7 @@ def generate_spreadsheet_from_contributions(contributions):
     """Return a tuple consisting of spreadsheet columns and respective
     contribution values"""
 
-    headers = ['Id', 'Title', 'Description', 'Date', 'Duration', 'Type', 'Session', 'Track', 'Presenters', 'Materials']
+    headers = ['Id', 'Title', 'Description', 'Date', 'Duration', 'Type', 'Session', 'Track', 'Presenters', 'Authors', 'Co-authors', 'Materials']
     rows = []
     for c in sorted(contributions, key=attrgetter('friendly_id')):
         contrib_data = {'Id': c.friendly_id, 'Title': c.title, 'Description': c.description,
@@ -108,6 +108,8 @@ def generate_spreadsheet_from_contributions(contributions):
                         'Session': c.session.title if c.session else None,
                         'Track': c.track.title if c.track else None,
                         'Materials': None,
+                        'Authors': ', '.join(speaker.person.full_name for speaker in c.primary_authors),
+                        'Co-authors': ', '.join(speaker.person.full_name for speaker in c.secondary_authors),
                         'Presenters': ', '.join(speaker.person.full_name for speaker in c.speakers)}
 
         attachments = []
