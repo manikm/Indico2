@@ -89,6 +89,8 @@ class SearchForm(IndicoForm):
     first_name = StringField(_('First name'))
     email = StringField(_('Email'), filters=[lambda x: x.lower() if x else x])
     affiliation = StringField(_('Affiliation'))
+    abstract = StringField(_('Abstract'))
+    track = StringField(_('Track'))
     exact = BooleanField(_('Exact match'))
     include_deleted = BooleanField(_('Include deleted'))
     include_pending = BooleanField(_('Include pending'))

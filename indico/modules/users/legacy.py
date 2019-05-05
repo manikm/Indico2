@@ -30,7 +30,9 @@ AVATAR_FIELD_MAP = {
     'email': 'email',
     'name': 'first_name',
     'surName': 'last_name',
-    'organisation': 'affiliation'
+    'organisation': 'affiliation',
+    'abstract': 'abstract',
+    'track': 'track'
 }
 
 
@@ -333,9 +335,11 @@ def search_avatars(criteria, exact=False, search_externals=False):
 
     def _process_identities(obj):
         if isinstance(obj, IdentityInfo):
+            
             GenericCache('pending_identities').set('{}:{}'.format(obj.provider.name, obj.identifier), obj.data)
             return AvatarProvisionalWrapper(obj)
         else:
+            #assert False, obj.as_avatar
             return obj.as_avatar
 
     results = search_users(exact=exact, external=search_externals,

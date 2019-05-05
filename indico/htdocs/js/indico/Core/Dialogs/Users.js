@@ -91,7 +91,16 @@ type ("FoundPeopleList", ["SelectableListWidget"], {
             var userName = Html.span("name", peopleData.get("firstName"), ' ', peopleData.get("familyName"));
             var userEmail = Html.span({id: self.id + "_" + pair.key + "_email", className: "email"}, Util.truncate(peopleData.get("email"), 40));
             var affiliation = Html.$($('<span class="affiliation">').text(peopleData.get('affiliation')));
-            var html = Html.div("info", userName, userEmail, affiliation);
+            var abstract = '', track = '';
+            if (peopleData.get("abstract"))
+            {
+                var abstract = Html.$($('<span style="display:block; color:#444; font-size:0.82em;" class="email">').text(peopleData.get("abstract")));
+                if (peopleData.get("track"))
+                {
+                    var track = Html.span("email", Util.truncate(peopleData.get("track"), 40));
+                }
+            }
+            var html = Html.div("info", userName, userEmail, affiliation, abstract, track);
 
             var $actionButtons = $('<div>', {'class': 'actions'});
             if (this.showToggleFavouriteButtons && IndicoGlobalVars.isUserAuthenticated && peopleData.get('_type') == "Avatar") {
@@ -270,14 +279,20 @@ type ("UserSearchPanel", ["SimpleSearchPanel"], {
             'name': new EnterObserverTextBox("text", {style: {width: "100%"}}, do_search),
             'email': new EnterObserverTextBox("text", {style: {width: "100%"}}, do_search),
             'organisation': new EnterObserverTextBox("text", {style: {width: "100%"}}, do_search),
-            'exactMatch': Html.checkbox({})
+            'abstract': new EnterObserverTextBox("text", {style: {width: "100%"}}, do_search),
+            'track': new EnterObserverTextBox("text", {style: {width: "100%"}}, do_search), //Html.select({}, Html.option({value: 1}, "mani")),
+            'exactMatch': Html.checkbox({}),
+            'eventPerson': Html.checkbox({})
         };
 
         var fieldList = [[$T("Family name"), this.fields.surName.draw()],
                          [$T("First name"), this.fields.name.draw()],
                          [$T("E-mail"), this.fields.email.draw()],
                          [$T("Organisation"), this.fields.organisation.draw()],
-                         [$T("Exact Match"), this.fields.exactMatch]];
+                         [$T("Abstract"), this.fields.abstract.draw()],
+                         [$T("Track"), this.fields.track.draw()],
+                         [$T("Exact Match"), this.fields.exactMatch],
+                         [$T("Only Event Person"), this.fields.eventPerson]];
 
         var authenticatorSearch = this._createAuthenticatorSearch();
         if (exists(authenticatorSearch)) {

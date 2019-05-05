@@ -29,6 +29,8 @@ from indico.core.db.sqlalchemy.principals import PrincipalType
 from indico.modules.categories import Category
 from indico.modules.categories.models.principals import CategoryPrincipal
 from indico.modules.events import Event
+from indico.modules.events.abstracts.models.abstracts import Abstract
+from indico.modules.events.tracks.models.tracks import Track
 from indico.modules.users import User, logger
 from indico.modules.users.models.affiliations import UserAffiliation
 from indico.modules.users.models.emails import UserEmail
@@ -218,8 +220,28 @@ def search_users(exact=False, include_deleted=False, include_pending=False, exte
     if email is not unspecified:
         query = query.join(UserEmail).filter(unaccent_match(UserEmail.email, email, exact))
 
+    abstract = criteria.pop('abstract', unspecified)
+    track = criteria.pop('track', unspecified)
+    query2 = query
+    if abstract is not unspecified:
+        if track is unspecified:
+            query = query.join(Abstract, (Abstract.submitter_id == User.id)).filter(unaccent_match(Abstract.title, abstract, exact)) 
+            query2 = query2.join(Abstract, (Abstract.submitter_id == User.id)).filter(unaccent_match(Abstract.title, abstract, exact)).add_columns(User.id, Track.title.label('track'), Abstract.title.label('abstract'))
+        else:
+            query = query.join(Abstract, (Abstract.submitter_id == User.id)).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Abstract.title, abstract, exact)).filter(unaccent_match(Track.title, track, exact)) 
+            query2 = query2.join(Abstract, (Abstract.submitter_id == User.id)).add_columns(User.id, Track.title.label('track'), Abstract.title.label('abstract')).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Abstract.title, abstract, exact)).filter(unaccent_match(Track.title, track, exact))
+    elif track is not unspecified:
+        query = query.join(Abstract, (Abstract.submitter_id == User.id)).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Track.title, track, exact)) 
+        query2 = query2.join(Abstract, (Abstract.submitter_id == User.id)).add_columns(User.id, Track.title.label('track'), Abstract.title.label('abstract')).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Track.title, track, exact))
+
     for k, v in criteria.iteritems():
         query = query.filter(unaccent_match(getattr(User, k), v, exact))
+
+    for user1 in query:
+        for user2 in query2:
+            if (user1.id == user2.id) and ((abstract is not unspecified) or (track is not unspecified)):
+                user1.abstract = user2.abstract
+                user1.track = user2.track
 
     found_emails = {}
     found_identities = {}
@@ -244,7 +266,6 @@ def search_users(exact=False, include_deleted=False, include_pending=False, exte
                     ident.data['email'].lower() not in found_emails):
                 found_emails[ident.data['email'].lower()] = ident
                 found_identities[(ident.provider, ident.identifier)] = ident
-
     return set(found_emails.viewvalues()) | system_user
 
 
