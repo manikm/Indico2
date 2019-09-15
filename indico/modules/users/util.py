@@ -228,11 +228,11 @@ def search_users(exact=False, include_deleted=False, include_pending=False, exte
             query = query.join(Abstract, (Abstract.submitter_id == User.id)).filter(unaccent_match(Abstract.title, abstract, exact)) 
             query2 = query2.join(Abstract, (Abstract.submitter_id == User.id)).filter(unaccent_match(Abstract.title, abstract, exact)).add_columns(User.id, Track.title.label('track'), Abstract.title.label('abstract'))
         else:
-            query = query.join(Abstract, (Abstract.submitter_id == User.id)).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Abstract.title, abstract, exact)).filter(unaccent_match(Track.title, track, exact)) 
-            query2 = query2.join(Abstract, (Abstract.submitter_id == User.id)).add_columns(User.id, Track.title.label('track'), Abstract.title.label('abstract')).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Abstract.title, abstract, exact)).filter(unaccent_match(Track.title, track, exact))
+            query = query.join(Abstract, (Abstract.submitter_id == User.id)).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Abstract.title, abstract, exact)).filter(Track.title.op("~*")(r'[[:<:]]{}[[:>:]]'.format(track))) 
+            query2 = query2.join(Abstract, (Abstract.submitter_id == User.id)).add_columns(User.id, Track.title.label('track'), Abstract.title.label('abstract')).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Abstract.title, abstract, exact)).filter(Track.title.op("~*")(r'[[:<:]]{}[[:>:]]'.format(track)))
     elif track is not unspecified:
-        query = query.join(Abstract, (Abstract.submitter_id == User.id)).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Track.title, track, exact)) 
-        query2 = query2.join(Abstract, (Abstract.submitter_id == User.id)).add_columns(User.id, Track.title.label('track'), Abstract.title.label('abstract')).join(Track, (Abstract.accepted_track_id == Track.id)).filter(unaccent_match(Track.title, track, exact))
+        query = query.join(Abstract, (Abstract.submitter_id == User.id)).join(Track, (Abstract.accepted_track_id == Track.id)).filter(Track.title.op("~*")(r'[[:<:]]{}[[:>:]]'.format(track))) 
+        query2 = query2.join(Abstract, (Abstract.submitter_id == User.id)).add_columns(User.id, Track.title.label('track'), Abstract.title.label('abstract')).join(Track, (Abstract.accepted_track_id == Track.id)).filter(Track.title.op("~*")(r'[[:<:]]{}[[:>:]]'.format(track)))
 
     for k, v in criteria.iteritems():
         query = query.filter(unaccent_match(getattr(User, k), v, exact))
