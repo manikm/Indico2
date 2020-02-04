@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-15 -*-
 # This file is part of Indico.
 # Copyright (C) 2002 - 2017 European Organization for Nuclear Research (CERN).
 #
@@ -18,6 +20,8 @@ from __future__ import unicode_literals
 
 from operator import attrgetter
 from uuid import UUID
+import re, codecs, hmac, hashlib
+from datetime import datetime, timedelta
 
 from flask import flash, jsonify, redirect, request, session
 from sqlalchemy.orm import contains_eager, subqueryload
@@ -70,6 +74,23 @@ class RHRegistrationFormRegistrationBase(RHRegistrationFormBase):
             self.registration = self.regform.get_registration(user=session.user) if session.user else None
 
 
+class RHRegistrationFormRegistrationBase2(RHRegistrationFormBase):
+    """Base for RHs handling individual registrations"""
+
+    def _process_args(self):
+        RHRegistrationFormBase._process_args(self)
+        self.token = request.args.get('token')
+        self.regtemp = self.regform.ticket_template_id
+        if self.token:
+            self.regform.ticket_template_id = 2
+            self.registration = self.regform.get_registration(uuid=self.token)
+            if not self.registration:
+                raise NotFound
+        else:
+            self.regform.ticket_template_id = 2
+            self.registration = self.regform.get_registration(user=session.user) if session.user else None
+
+
 class RHRegistrationFormList(RHRegistrationFormDisplayBase):
     """List of all registration forms in the event"""
 
@@ -82,6 +103,7 @@ class RHRegistrationFormList(RHRegistrationFormDisplayBase):
             return redirect(url_for('.display_regform', scheduled_and_registered_regforms[0]))
         return self.view_class.render_template('display/regform_list.html', self.event,
                                                regforms=scheduled_and_registered_regforms,
+                                               vc=request.args.get('vc'),
                                                user_registrations=user_registrations)
 
 
@@ -257,24 +279,77 @@ class RHRegistrationForm(InvitationMixin, RHRegistrationFormRegistrationBase):
 
     def _process(self):
         form = make_registration_form(self.regform)()
-        if form.validate_on_submit() and not self.regform.limit_reached:
-            registration = create_registration(self.regform, form.data, self.invitation)
-            return redirect(url_for('.display_regform', registration.locator.registrant))
-        elif form.is_submitted():
-            # not very pretty but usually this never happens thanks to client-side validation
-            for error in form.error_list:
-                flash(error, 'error')
+
+        verif_field, reg_field = ('','')
+        for k in form._fields:
+            if form._fields[k].label.text.lower() == 'registration option':
+                reg_field = form._fields[k].label.field_id
+            if form._fields[k].label.text.lower() == 'verification code':
+                verif_field = form._fields[k].label.field_id
+
+        verif_code = ''
+        if verif_field and form._fields[verif_field].data:
+            verif_code = form._fields[verif_field].data
+        elif request.args.get('vc'):
+            verif_code = request.args.get('vc')
+
+        reg_opt = ''
+        if reg_field and form._fields[reg_field].data:
+            reg_opt = form._fields[reg_field].data
+
+        opt_text = ''
+        if reg_opt:
+            for i in self.regform.active_fields:
+                if i.title.lower() == 'registration option':
+                    for k in i.data['captions']:
+                        if k == next(iter(reg_opt)):
+                            opt_text = i.data['captions'][k]
+                else:
+                    continue
+
+        members_choice = False
+        if opt_text and re.search(r' members', opt_text, flags=re.IGNORECASE):
+            members_choice = True
 
         user_data = {t.name: getattr(session.user, t.name, None) if session.user else '' for t in PersonalDataType}
+
+        reg_allowed = False
+        if members_choice:
+            str_list = [user_data['first_name']+user_data['last_name']+'/'+str(self.event.id)+'/'+datetime.today().strftime('%Y-%m-%d'),
+                    user_data['first_name']+user_data['last_name']+'/'+str(self.event.id)+'/'+(datetime.now() + timedelta(days=-1)).strftime('%Y-%m-%d'),
+                    user_data['first_name']+user_data['last_name']+'/'+str(self.event.id)+'/'+(datetime.now() + timedelta(days=-2)).strftime('%Y-%m-%d')]
+            for strn in str_list:
+                sha = hmac.new(u''.encode(), strn.lower().encode('utf-8'), hashlib.sha256).hexdigest()
+                md = hmac.new(''.encode(), sha.encode(), hashlib.md5).hexdigest()
+                enc = codecs.encode(codecs.decode(md, 'hex'), 'base64').decode().replace("\n","").replace("=","").replace("/","9").replace("+","8")
+                if enc == verif_code:
+                    reg_allowed = True
+
+        setattr(self.regform, 'member_attempt', False)
+        if (members_choice and reg_allowed) or not members_choice:
+            if form.validate_on_submit() and not self.regform.limit_reached:
+                registration = create_registration(self.regform, form.data, self.invitation)
+                return redirect(url_for('.display_regform', registration.locator.registrant))
+            elif form.is_submitted():
+                # not very pretty but usually this never happens thanks to client-side validation
+                for error in form.error_list:
+                    flash(error, 'error')
+        else:
+            setattr(self.regform, 'member_attempt', True)
+
         if self.invitation:
             user_data.update((attr, getattr(self.invitation, attr)) for attr in ('first_name', 'last_name', 'email'))
         user_data['title'] = get_title_uuid(self.regform, user_data['title'])
+
+        if verif_field:
+            user_data[verif_field] = request.args.get('vc')
+
         return self.view_class.render_template('display/regform_display.html', self.event,
                                                regform=self.regform,
                                                sections=get_event_section_data(self.regform),
-                                               payment_conditions=payment_event_settings.get(self.event,
-                                                                                             'conditions'),
+                                               payment_conditions=payment_event_settings.get(self.event, 'conditions'),
                                                payment_enabled=self.event.has_feature('payment'),
+                                               vc=request.args.get('vc'),
                                                user_data=user_data,
                                                invitation=self.invitation,
                                                registration=self.registration,

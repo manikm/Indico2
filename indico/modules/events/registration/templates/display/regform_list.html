@@ -55,11 +55,19 @@
                     {% endif %}
                     <td class="regform-actions">
                         {% if session.user and regform.id in user_registrations %}
-                            <a href="{{ url_for('.display_regform', regform) }}"
-                               class="i-button highlight"
-                               title="{% trans %}You have already registered{% endtrans %}">
-                                {% trans %}Check details{% endtrans %}
-                            </a>
+                            {% if vc %}
+                                <a href="{{ url_for('.display_regform', regform) }}?vc={{vc}}"
+                                   class="i-button highlight"
+                                   title="{% trans %}You have already registered{% endtrans %}">
+                                    {% trans %}Check details{% endtrans %}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('.display_regform', regform) }}"
+                                   class="i-button highlight"
+                                   title="{% trans %}You have already registered{% endtrans %}">
+                                    {% trans %}Check details{% endtrans %}
+                                </a>
+                            {% endif %}
                         {% elif not regform.is_open %}
                             <a class="i-button highlight disabled"
                                title="{% trans %}Registration is closed{% endtrans %}">
@@ -71,9 +79,15 @@
                                 {{ button_text }}
                             </a>
                         {% else %}
-                            <a href="{{ url_for('.display_regform', regform) }}" class="i-button highlight">
-                                {{ button_text }}
-                            </a>
+                            {% if vc %}
+                                <a href="{{ url_for('.display_regform', regform) }}?vc={{vc}}" class="i-button highlight">
+                                    {{ button_text }}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('.display_regform', regform) }}" class="i-button highlight">
+                                    {{ button_text }}
+                                </a>
+                            {% endif %}
                         {% endif %}
                     </td>
                 </tr>

@@ -98,6 +98,20 @@
             {% endcall %}
         {% endif %}
 
+        {% if regform.member_attempt %}
+            {% call message_box('error', fixed_width=true, large_icon=true) %}
+                <div class="label">
+                    {% trans %}Membership verification required{% endtrans %}
+                </div>
+                To register as an InterPore member, you must first verify your membership status. You can review
+                and renew your membership by visiting:<br><a href="https://www.interpore.org/member-main/user-profile">
+                https://www.interpore.org/member-main/user-profile</a>
+                <br>Once you have completed your membership activation/renewal, visit:
+                <br><a href="https://www.interpore.org/event-registration">https://www.interpore.org/event-registration</a>
+                <br>to obtain your verification code.
+            {% endcall %}
+        {% endif %}
+
         <div ng-app="nd" ng-controller="AppCtrl">
             <div nd-reg-form
                 conf-id="{{ event.id }}"
