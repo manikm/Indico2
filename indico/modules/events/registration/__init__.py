@@ -74,6 +74,18 @@ def _inject_regform_announcement(event, **kwargs):
                                    registrations_with_tickets=get_registrations_with_tickets(session.user, event))
 
 
+@template_hook('conference-tab-info')
+def _inject_regform_announcement(event, roles, has_contrib, **kwargs):
+    from indico.modules.events.registration.util import get_registrations_with_tickets, get_event_regforms
+    if event.has_feature('registration'):
+        all_regforms = get_event_regforms(event, session.user)
+        user_registrations = sum(regform[1] for regform in all_regforms)
+        return render_template('events/registration/display/conference_tab.html',
+                               event=event, roles=roles, has_contrib=has_contrib,
+                               user_registrations=user_registrations,
+                               registrations_with_tickets=get_registrations_with_tickets(session.user, event))
+
+
 @template_hook('event-header')
 def _inject_event_header(event, **kwargs):
     from indico.modules.events.registration.util import get_event_regforms

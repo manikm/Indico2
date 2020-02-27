@@ -1,0 +1,135 @@
+{% macro _render_ticket_dropdown() %}
+    {% if registrations_with_tickets %}
+        <div class="group">
+            <a class="i-button text-color subtle icon-file-download js-dropdown arrow" data-toggle="dropdown">
+                {% trans %}Ticket{% endtrans %}
+            </a>
+            <ul class="dropdown">
+                {% for registration in registrations_with_tickets -%}
+                    {% set regform = registration.registration_form %}
+                    <li>
+                        <a href="{{ url_for('event_registration.ticket_download', regform) }}"
+                           title="{% trans title=regform.title -%}Download ticket for the '{{ title }}' registration form{%- endtrans %}">
+                            {% trans title=regform.title -%}
+                                {{ title }}
+                            {%- endtrans %}
+                        </a>
+                    </li>
+                {%- endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro _render_certificate_dropdown() %}
+    {% set co = [] %}
+    {% if registrations_with_tickets %}
+        {% for registration in registrations_with_tickets if registration.checked_in -%}
+            {% if co.append(1) %}{% endif %}
+        {%- endfor %}
+        {% if co[0] %}
+            <div class="group">
+                <a class="i-button text-color subtle icon-file-download js-dropdown arrow" data-toggle="dropdown">
+                    {% trans %}Certificate{% endtrans %}
+                </a>
+                <ul class="dropdown">
+                    <li>
+                        <a href="#"
+                           title="{% trans title=event.title -%}Download certificate of attendance for the '{{ title }}'{%- endtrans %}">
+                            {% trans title=event.title -%}
+                                {{ title }}
+                            {%- endtrans %}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        {% endif %} 
+    {% endif %}
+{% endmacro %}
+
+{% macro _render_invitation_dropdown() %}
+    {% set co = [] %}
+    {% if registrations_with_tickets %}
+        {% for registration in registrations_with_tickets if registration.checked_in -%}
+            {% if co.append(1) %}{% endif %}
+        {%- endfor %}
+        {% if co[0] %}
+            <div class="group">
+                <a class="i-button text-color subtle icon-file-download js-dropdown arrow" data-toggle="dropdown">
+                    {% trans %}Invitation{% endtrans %}
+                </a>
+                <ul class="dropdown">
+                    <li>
+                        <a href="#"
+                           title="{% trans title=event.title -%}Download invitation letter for the '{{ title }}'{%- endtrans %}">
+                            {% trans title=event.title -%}
+                                {{ title }}
+                            {%- endtrans %}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endmacro %}
+
+{% macro _render_invoice_dropdown() %}
+    {% if registrations_with_tickets %}
+        <div class="group">
+            <a class="i-button text-color subtle icon-file-download js-dropdown arrow" data-toggle="dropdown">
+                {% trans %}Invoice{% endtrans %}
+            </a>
+            <ul class="dropdown">
+                {% for registration in registrations_with_tickets -%}
+                    {% set regform = registration.registration_form %}
+                    <li>
+                        <a href="#"
+                           title="{% trans title=regform.title -%}Download invoice for the '{{ title }}'{%- endtrans %}">
+                            {% trans title=regform.title -%}
+                                {{ title }}
+                            {%- endtrans %}
+                        </a>
+                    </li>
+                {%- endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% if not g.static_site %}
+    {% set single_regform = regforms|first if regforms|length == 1 else none %}
+    {% set is_form_moderated = single_regform.moderation_enabled if single_regform %}
+    {% set is_number_published = single_regform.publish_registration_count if single_regform %}
+    <div class="action-box highlight">
+        <div class="section">
+            <span class="icon icon-file-filled"></span>
+            <div class="toolbar" style="margin-left:0">
+                {% if user_registrations %}
+                    {{ _render_ticket_dropdown() }}
+                    {{ _render_invitation_dropdown() }}
+                    {{ _render_certificate_dropdown() }}
+                    {{ _render_invoice_dropdown() }}
+                    <a class="i-button next highlight"
+                       href="{{ url_for('event_registration.display_regform', single_regform) if single_regform else
+                                url_for('event_registration.display_regform_list', event) }}"
+                       title="{% trans %}Proceed with your registration(s).{% endtrans %}">
+                        {% trans %}Proceed{% endtrans %}
+                    </a>
+                {% else %}
+                {% endif %}
+                {% if has_contrib %}
+                    <a class="i-button text-color subtle icon-file-presentation"
+                       href="{{ url_for('users.user_contributions', session.user) }}"
+                       title="{% trans %}Check out your contributions.{% endtrans %}">
+                    </a>
+                {%  endif %}
+                {% if event.can_manage(session.user) %}
+                    <a class="i-button text-color subtle icon-edit"
+                       href="{{ url_for('event_management.settings', event) }}"
+                       title="{% trans %}Switch to the management area of this event{% endtrans %}">
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endif %}

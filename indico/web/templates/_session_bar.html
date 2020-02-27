@@ -130,6 +130,11 @@
             </a>
         </div>
         <div class="settingsWidgetSection">
+            <a href="{{ url_for('users.user_conference', session.user) }}">
+                {%- trans %}My conference{% endtrans -%}
+            </a>
+        </div>
+        <div class="settingsWidgetSection">
             {{ _render_language_selector(languages, lightweight=true) }}
         </div>
         {% if session.user.is_admin %}

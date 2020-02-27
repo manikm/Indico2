@@ -1,19 +1,30 @@
 {% extends 'layout/management_page.html' %}
 {% from 'message_box.html' import message_box %}
 
-{% set show_nav = request.endpoint != 'users.user_dashboard' %}
+{% set show_nav = request.endpoint != 'users.user_dashboard' and request.endpoint != 'users.user_conference' and request.endpoint != 'users.user_contributions' %}
+{% set show_conf_nav = request.endpoint == 'users.user_conference' or request.endpoint == 'users.user_contributions' %}
 
 {% block banner_title %}
     {% if user == session.user %}
-        {% trans %}My Profile{% endtrans %}
+        {% if request.endpoint == 'users.user_conference' or request.endpoint == 'users.user_contributions' %}
+            {% trans %}My Conference{% endtrans %}
+        {% else %}
+            {% trans %}My Profile{% endtrans %}
+        {% endif %}
     {% else %}
-        {% trans name=user.full_name %}Profile of {{ name }}{% endtrans %}
+        {% if request.endpoint == 'users.user_conference' or request.endpoint == 'users.user_contributions' %}
+            {% trans %}My Conference{% endtrans %}
+        {% else %}
+            {% trans name=user.full_name %}Conferences of {{ name }}{% endtrans %}
+        {% endif %}
     {% endif %}
 {% endblock %}
 
 {% block side_menu -%}
     {% if show_nav %}
         {{ render_sidemenu('user-profile-sidemenu', active_item=active_menu_item, user=user) }}
+    {% elif show_conf_nav %}
+        {{ render_sidemenu('user-conference-sidemenu', active_item=active_menu_item, user=user) }}
     {% endif %}
 {%- endblock %}
 

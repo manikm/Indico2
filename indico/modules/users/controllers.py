@@ -38,6 +38,7 @@ from indico.modules.auth.models.registration_requests import RegistrationRequest
 from indico.modules.auth.util import register_user
 from indico.modules.categories import Category
 from indico.modules.events import Event
+from indico.modules.events.abstracts.util import get_user_abstracts
 from indico.modules.users import User, logger, user_management_settings
 from indico.modules.users.forms import (AdminAccountRegistrationForm, AdminsForm, AdminUserSettingsForm, MergeForm,
                                         SearchForm, UserDetailsForm, UserEmailsForm, UserPreferencesForm)
@@ -134,6 +135,70 @@ class RHUserDashboard(RHUserBase):
                                       categories_events=categories_events,
                                       suggested_categories=get_suggested_categories(self.user),
                                       linked_events=linked_events)
+
+
+class RHUserConference(RHUserBase):
+    management_roles = {'conference_creator', 'conference_chair', 'conference_manager', 'session_manager',
+                        'session_coordinator', 'contribution_manager'}
+    reviewer_roles = {'paper_manager', 'paper_judge', 'paper_content_reviewer', 'paper_layout_reviewer',
+                      'contribution_referee', 'contribution_editor', 'contribution_reviewer', 'abstract_reviewer',
+                      'track_convener'}
+    attendance_roles = {'contributor', 'contribution_submission', 'abstract_submitter', 'abstract_person',
+                        'registration_registrant', 'survey_submitter', 'lecture_speaker'}
+
+    def _process(self):
+        self.user.settings.set('suggest_categories', True)
+        tz = session.tzinfo
+        hours, minutes = timedelta_split(tz.utcoffset(datetime.now()))[:2]
+        categories = get_related_categories(self.user)
+        categories_events = []
+        if categories:
+            category_ids = {c['categ'].id for c in categories.itervalues()}
+            today = now_utc(False).astimezone(tz).date()
+            query = (Event.query
+                     .filter(~Event.is_deleted,
+                             Event.category_chain_overlaps(category_ids),
+                             Event.start_dt.astimezone(session.tzinfo) >= today)
+                     .options(joinedload('category').load_only('id', 'title'),
+                              joinedload('series'),
+                              subqueryload('acl_entries'),
+                              load_only('id', 'category_id', 'start_dt', 'end_dt', 'title', 'access_key',
+                                        'protection_mode', 'series_id', 'series_pos', 'series_count'))
+                     .order_by(Event.start_dt, Event.id))
+            categories_events = get_n_matching(query, 10, lambda x: x.can_access(self.user))
+        from_dt = now_utc(False) - relativedelta(years=100, weeks=1, hour=0, minute=0, second=0)
+        linked_events = [(event, {'management': bool(roles & self.management_roles),
+                                  'reviewing': bool(roles & self.reviewer_roles),
+                                  'attendance': bool(roles & self.attendance_roles)})
+                         for event, roles in get_linked_events(self.user, from_dt, 10).iteritems()]
+        return WPUser.render_template('conference.html', 'conferences',
+                                      offset='{:+03d}:{:02d}'.format(hours, minutes), user=self.user,
+                                      now_utc=now_utc(False),
+                                      categories=categories,
+                                      categories_events=categories_events,
+                                      suggested_categories=get_suggested_categories(self.user),
+                                      linked_events=linked_events,
+                                      gua = get_user_abstracts)
+
+
+class RHUserContributions(RHUserBase):
+    allow_system_user = True
+    management = None
+    def _process(self):
+        form = UserDetailsForm(obj=FormDefaults(self.user, skip_attrs={'title'}, title=self.user._title),
+                               synced_fields=self.user.synced_fields, synced_values=self.user.synced_values)
+        if form.validate_on_submit():
+            self.user.synced_fields = form.synced_fields
+            form.populate_obj(self.user, skip=self.user.synced_fields)
+            self.user.synchronize_data(refresh=True)
+            flash(_('Your personal data was successfully updated.'), 'success')
+            return redirect(url_for('.user_profile'))
+        from_dt = now_utc(False) - relativedelta(years=100, weeks=1, hour=0, minute=0, second=0)
+        linked_events = [event for event, roles in get_linked_events(self.user, from_dt, 10).iteritems()]
+        return WPUser.render_template('contributions.html', 'contributions', user=self.user, form=form,
+                                      now_utc=now_utc(False),
+                                      linked_events=linked_events,
+                                      gua = get_user_abstracts)
 
 
 class RHPersonalData(RHUserBase):

@@ -1,0 +1,62 @@
+{% extends 'users/base.html' %}
+{% from 'users/_category.html' import suggested_category, user_category %}
+
+{% macro _format_event_times(event) %}
+    {% if event.start_dt.astimezone(session.tzinfo).date() != event.end_dt.astimezone(session.tzinfo).date() %}
+        {{ event.start_dt|format_datetime }} - {{ event.end_dt|format_datetime }}
+    {% else %}
+        {{ event.start_dt|format_time }} - {{ event.end_dt|format_time }}
+    {% endif %}
+    ({{ session.tzinfo.zone }})
+{% endmacro %}
+
+{% macro _format_event_time(event) %}
+    {% if event.start_dt <= now() < event.end_dt %}
+        {% trans %}Now{% endtrans %}
+    {% else %}
+        {{ event.start_dt | format_pretty_date(tzinfo=session.tzinfo) }}
+    {% endif %}
+{% endmacro %}
+
+{% block page_class %}user-conferences{% endblock %}
+{% block banner_class %}user-conferences{% endblock %}
+
+{% block user_content %}
+    <div class="dashboard-tab">
+        <div class="quick-access-pane">
+            <div class="dashboard-col">
+            {% for event, roles in linked_events %}
+                <div class="dashboard-box"{% if event.end_dt >= now_utc %} style="border-color:#c3e6cb" {% endif %}>
+                    <h3{% if event.end_dt >= now_utc %} style="background-color:#d4edda" {% endif %}>
+                        <a href="{{ event.url }}" class="truncate">     
+                            {{ event.get_verbose_title(show_series_pos=true) }} ({{ _format_event_time(event) }})
+                        </a>
+                        <span class="item-legend right">
+                            <span {% if roles.management %}title="{% trans %}You have management rights{% endtrans %}"{% endif %}
+                                  class="icon-medal contextHelp {% if roles.management %}active{% endif %}"></span>
+                            <span {% if roles.reviewing %}title="{% trans %}You are a reviewer{% endtrans %}"{% endif %}
+                                  class="icon-user-reading contextHelp {% if roles.reviewing %}active{% endif %}"></span>
+                            <span {% if roles.attendance %}title="{% trans %}You are an attendee{% endtrans %}"{% endif %}
+                                  class="icon-ticket contextHelp {% if roles.attendance %}active{% endif %}"></span>
+                        </span>
+                    </h3>
+                    <div id="event-{{ event.id }}" class="truncate" style="margin:20px">
+                        {% set has_contrib = gua(event, user)[0] %}
+                        {{ template_hook('conference-tab-info', event=event, roles=roles, has_contrib=has_contrib) }}
+                    </div>
+                </div>
+            {% else %}
+                <div class="dashboard-box">
+
+                    <div class="no-event">
+                        <span class="event-title italic text-superfluous">
+                            {% trans %}You have no events.{% endtrans %}
+                        </span>
+                    </div>
+
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

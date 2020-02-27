@@ -75,6 +75,12 @@ def _sidemenu_items(sender, user, **kwargs):
     yield SideMenuItem('favorites', _('Favourites'), url_for('users.user_favorites'), 60, disabled=user.is_system)
 
 
+@signals.menu.items.connect_via('user-conference-sidemenu')
+def _sidemenu_items(sender, user, **kwargs):
+    yield SideMenuItem('conferences', _('Conferences'), url_for('users.user_conference'), 100, disabled=user.is_system)
+    yield SideMenuItem('contributions', _('Contributions'), url_for('users.user_contributions'), 90, disabled=user.is_system)
+
+
 @signals.menu.items.connect_via('top-menu')
 def _topmenu_items(sender, **kwargs):
     if session.user:
